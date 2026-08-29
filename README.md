@@ -80,6 +80,7 @@ Sans cela, Google se connecte mais la redirection retourne une erreur.
 - 📅 **Journal** du jour : coche tes habitudes, série +7 jours, anneau de progression
 - ✅ **Habitudes** : 7 derniers jours à cocher, éditeur (nom, emoji, couleur)
 - 👥 **Amis** : recherche par pseudo, demandes acceptées/en attente, classement du jour 🏅
+- 💬 **Chat** : discute en temps réel avec tes amis (accusés de lecture ✓✓)
 - 📈 **Stats** : coches totales, meilleure série, taux sur 14 jours, heatmap 30 jours
 - ⚡ **Realtime** : mises à jour instantanées quand un ami coche une habitude
 - 🌙 Thème sombre/clair (suit ton système), responsive mobile, French-first

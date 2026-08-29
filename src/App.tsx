@@ -33,10 +33,10 @@ export default function App() {
   useEffect(() => {
     const meta = document.createElement('meta');
     meta.name = 'theme-color';
-    meta.content = user ? '#0b0e1a' : '#0b0e1a';
+    meta.content = '#f6f7fa';
     document.head.appendChild(meta);
     return () => { document.head.removeChild(meta); };
-  }, [user]);
+  }, []);
 
   return (
     <Routes>

@@ -84,7 +84,7 @@ export function Layout() {
           <Avatar profile={profile ?? { username: '?', avatar_url: null }} size={34} />
           <div className="user-meta">
             <strong>@{profile?.username}</strong>
-            <small>Connecté via Google</small>
+            <small>{user?.app_metadata?.provider === 'google' ? 'Connecté via Google' : user?.email ?? 'Connecté'}</small>
           </div>
           <button className="icon-btn" onClick={() => setMenuOpen((v) => !v)} aria-label="Menu">
             ⋮

@@ -55,6 +55,15 @@ export type ProfileView = {
   weekTotal: number;
 };
 
+export type Message = {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  created_at: string;
+  read_at: string | null;
+};
+
 /** Ensemble de dates cochées par habitude */
 export type HabitData = {
   habit: Habit;

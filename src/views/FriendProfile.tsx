@@ -8,6 +8,7 @@ import { Avatar, Skeleton, EmptyState } from '@/components/ui';
 import { Heatmap } from '@/components/Heatmap';
 import { ProfileHabitCard } from '@/components/HabitCard';
 import { Confirm } from '@/components/Modal';
+import { ChatModal } from '@/components/ChatModal';
 import type { ProfileView } from '@/lib/types';
 import { shortDate } from '@/lib/dates';
 
@@ -20,6 +21,7 @@ export default function FriendProfile() {
   const [view, setView] = useState<ProfileView | null>(null);
   const [canView, setCanView] = useState(true);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!user || !id) return;
@@ -85,7 +87,10 @@ export default function FriendProfile() {
           </p>
         </div>
         {!view.isSelf && view.profile && (
-          <button className="btn btn-ghost" onClick={() => setConfirmRemove(true)}>Retirer l'ami</button>
+          <div className="profile-actions">
+            <button className="btn btn-primary" onClick={() => setChatOpen(true)}>💬 Discuter</button>
+            <button className="btn btn-ghost" onClick={() => setConfirmRemove(true)}>Retirer l'ami</button>
+          </div>
         )}
       </div>
 
@@ -127,6 +132,10 @@ export default function FriendProfile() {
           onConfirm={onRemove}
           onCancel={() => setConfirmRemove(false)}
         />
+      )}
+
+      {chatOpen && view.profile && (
+        <ChatModal peer={view.profile} onClose={() => setChatOpen(false)} />
       )}
     </div>
   );

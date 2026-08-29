@@ -20,6 +20,7 @@ import { useRealtime } from '@/hooks/useRealtime';
 import { useToast } from '@/components/Toast';
 import { Avatar, EmptyState, Skeleton } from '@/components/ui';
 import { Confirm } from '@/components/Modal';
+import { ChatModal } from '@/components/ChatModal';
 import type { FriendOverview, Profile } from '@/lib/types';
 
 type Extra = { isFriend: boolean; outgoingId: string | null; incomingId: string | null };
@@ -36,6 +37,7 @@ export default function Friends() {
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<(Profile & Extra)[] | null>(null);
   const [removing, setRemoving] = useState<FriendOverview | null>(null);
+  const [chatPeer, setChatPeer] = useState<FriendOverview | null>(null);
   const timer = useRef<number | undefined>(undefined);
 
   const load = useCallback(async () => {
@@ -264,7 +266,8 @@ export default function Friends() {
                   </span>
                 </div>
                 <div className="row-actions" onClick={(e) => e.stopPropagation()}>
-                  <button className="btn" onClick={() => navigate(`/u/${f.id}`)}>Voir</button>
+                  <button className="btn btn-chat" onClick={() => setChatPeer(f)}>💬 Discuter</button>
+                  <button className="btn btn-ghost" onClick={() => navigate(`/u/${f.id}`)}>Voir</button>
                   <button className="icon-btn danger" onClick={() => setRemoving(f)} title="Retirer">✕</button>
                 </div>
               </div>
@@ -297,6 +300,8 @@ export default function Friends() {
       {friends?.map((f) => (
         <FriendRT key={f.id} userId={f.id} onEvent={load} />
       ))}
+
+      {chatPeer && <ChatModal peer={chatPeer} onClose={() => setChatPeer(null)} />}
     </div>
   );
 }
