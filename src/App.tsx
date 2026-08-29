@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { Layout } from '@/components/Layout';
 import { BoltIcon } from '@/lib/icons';
 import Login from '@/views/Login';
+import Landing from '@/views/Landing';
 import Journal from '@/views/Journal';
 import Habits from '@/views/Habits';
 import Friends from '@/views/Friends';
@@ -28,13 +29,23 @@ function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function Home() {
+  const { user, loading } = useAuth();
+  if (loading) return <Splash />;
+  return user ? <Layout /> : <Landing />;
+}
+
 export default function App() {
   const { user, loading } = useAuth();
+  if (loading) return <Splash />;
 
   return (
     <Routes>
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/" element={<Home />}>
+        <Route index element={<Journal />} />
+      </Route>
       <Route
         element={
           <RequireAuth>
@@ -42,13 +53,12 @@ export default function App() {
           </RequireAuth>
         }
       >
-        <Route path="/" element={<Journal />} />
         <Route path="/habits" element={<Habits />} />
         <Route path="/amis" element={<Friends />} />
         <Route path="/u/:id" element={<FriendProfile />} />
         <Route path="/stats" element={<Stats />} />
       </Route>
-      <Route path="*" element={<Navigate to={loading || !user ? '/auth' : '/'} replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
