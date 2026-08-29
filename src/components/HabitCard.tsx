@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { HabitState } from '@/lib/types';
 import { relativeDayLabel, weekdayLabel, dayNumber, lastDays } from '@/lib/dates';
+import { HabitIcon, FireIcon, CheckIcon } from '@/lib/icons';
 
 const BURST_COLORS = ['#6366f1', '#a855f7', '#22d3ee', '#34d399', '#fbbf24', '#f472b6'];
 
@@ -43,10 +44,10 @@ export function ToggleHabitCard({
     <div className={`habit-card ${doneToday ? 'done' : ''}`} style={{ '--c': h.color } as React.CSSProperties}>
       <div className="card-glow" style={{ background: h.color }} />
       <div className="habit-top">
-        <span className="habit-emoji">{h.emoji}</span>
+        <span className="habit-emoji"><HabitIcon emoji={h.emoji} size={24} fallback={h.name.charAt(0)} /></span>
         <div className="habit-title">
           <strong>{h.name}</strong>
-          <span className="habit-streak">🔥 {streak} jour{streak > 1 ? 's' : ''}</span>
+          <span className="habit-streak"><FireIcon size={13} /> {streak} jour{streak > 1 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -67,7 +68,7 @@ export function ToggleHabitCard({
         aria-label={doneToday ? 'Décocher' : 'Cocher'}
         aria-pressed={doneToday}
       >
-        {doneToday ? '✓' : ''}
+        {doneToday ? <CheckIcon size={26} /> : ''}
         {burstKey > 0 && doneToday && <Burst key={burstKey} />}
       </button>
     </div>
@@ -79,14 +80,14 @@ export function ProfileHabitCard({ habit }: { habit: { name: string; emoji: stri
     <div className={`habit-card done ${habit.doneToday ? 'done-friend' : ''}`} style={{ '--c': habit.color } as React.CSSProperties}>
       <div className="card-glow" style={{ background: habit.color }} />
       <div className="habit-top">
-        <span className="habit-emoji">{habit.emoji}</span>
+        <span className="habit-emoji"><HabitIcon emoji={habit.emoji} size={24} fallback={habit.name.charAt(0)} /></span>
         <div className="habit-title">
           <strong>{habit.name}</strong>
-          <span className="habit-streak">🔥 {habit.streak} jour{habit.streak > 1 ? 's' : ''}</span>
+          <span className="habit-streak"><FireIcon size={13} /> {habit.streak} jour{habit.streak > 1 ? 's' : ''}</span>
         </div>
       </div>
       <span className={`badge-pill ${habit.doneToday ? 'ok' : 'wait'}`}>
-        {habit.doneToday ? "✓ Fait aujourd'hui" : 'Pas encore fait'}
+        {habit.doneToday ? (<><CheckIcon size={12} /> Fait aujourd'hui</>) : 'Pas encore fait'}
       </span>
     </div>
   );

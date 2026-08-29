@@ -9,6 +9,7 @@ import { Heatmap } from '@/components/Heatmap';
 import { ProfileHabitCard } from '@/components/HabitCard';
 import { Confirm } from '@/components/Modal';
 import { ChatModal } from '@/components/ChatModal';
+import { LockIcon, ArrowLeftIcon, ChatIcon } from '@/lib/icons';
 import type { ProfileView } from '@/lib/types';
 import { shortDate } from '@/lib/dates';
 
@@ -63,7 +64,7 @@ export default function FriendProfile() {
     return (
       <div className="page">
         <EmptyState
-          emoji="🔒"
+          icon={<LockIcon size={40} />}
           title="Profil privé"
           text="Vous devez être amis pour voir les habitudes de cet utilisateur."
         />
@@ -76,7 +77,7 @@ export default function FriendProfile() {
 
   return (
     <div className="page">
-      <button className="back-btn" onClick={() => navigate(-1)}>← Retour</button>
+      <button className="back-btn" onClick={() => navigate(-1)}><ArrowLeftIcon size={15} /> Retour</button>
 
       <div className="profile-header">
         <Avatar profile={view.profile} size={72} />
@@ -88,7 +89,7 @@ export default function FriendProfile() {
         </div>
         {!view.isSelf && view.profile && (
           <div className="profile-actions">
-            <button className="btn btn-primary" onClick={() => setChatOpen(true)}>💬 Discuter</button>
+            <button className="btn btn-primary" onClick={() => setChatOpen(true)}><ChatIcon size={16} /> Discuter</button>
             <button className="btn btn-ghost" onClick={() => setConfirmRemove(true)}>Retirer l'ami</button>
           </div>
         )}

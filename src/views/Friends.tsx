@@ -21,6 +21,7 @@ import { useToast } from '@/components/Toast';
 import { Avatar, EmptyState, Skeleton } from '@/components/ui';
 import { Confirm } from '@/components/Modal';
 import { ChatModal } from '@/components/ChatModal';
+import { SearchIcon, HeartIcon, HourglassIcon, FireIcon, UsersIcon, ChatIcon, XIcon } from '@/lib/icons';
 import type { FriendOverview, Profile } from '@/lib/types';
 
 type Extra = { isFriend: boolean; outgoingId: string | null; incomingId: string | null };
@@ -99,7 +100,7 @@ export default function Friends() {
   const onAcceptByRequestId = async (reqId: string, peerName: string) => {
     try {
       await acceptRequest(reqId);
-      toast(`Amitié acceptée avec @${peerName} 🤝`);
+      toast(`Amitié acceptée avec @${peerName}`);
       setResults(null);
       load();
     } catch (e) { toast((e as Error).message, 'error'); }
@@ -135,7 +136,7 @@ export default function Friends() {
       </header>
 
       <div className="search-bar">
-        <span>🔍</span>
+        <SearchIcon size={18} />
         <input
           value={q}
           placeholder="Rechercher un pseudo…"
@@ -191,7 +192,7 @@ export default function Friends() {
           <div className="stack">
             {incoming.map((r) => (
               <div className="row-card" key={r.id}>
-                <span className="avatar avatar-letter">💌</span>
+                <span className="avatar avatar-letter"><HeartIcon size={20} /></span>
                 <div className="row-main">
                   <strong>@{r.peerName}</strong>
                   <span className="muted">veut t'ajouter en ami</span>
@@ -212,7 +213,7 @@ export default function Friends() {
           <div className="stack">
             {outgoing.map((r) => (
               <div className="row-card" key={r.id}>
-                <span className="avatar avatar-letter">⏳</span>
+                <span className="avatar avatar-letter"><HourglassIcon size={20} /></span>
                 <div className="row-main">
                   <strong>@{r.peerName}</strong>
                   <span className="muted">en attente de réponse</span>
@@ -237,10 +238,11 @@ export default function Friends() {
                 <span className={`podium-rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : 'bronze'}`}>{i + 1}</span>
                 <Avatar profile={f} size={44} />
                 <strong>@{f.username}</strong>
-                <span className="muted">
-                  {f.doneToday ? `✓ ${f.doneToday} aujourd'hui` : 'Rien pour l' + 'instant'}
-                </span>
-                <span className="chip-streak">🔥 {f.bestStreak}</span>
+<span className="muted">
+                    {f.doneToday ? `${f.doneToday} faite${f.doneToday > 1 ? 's' : ''} aujourd'hui` : "rien encore aujourd'hui"} ·{' '}
+                    <span className="ic"><FireIcon size={12} /> {f.bestStreak}</span>
+                  </span>
+                <span className="chip-streak"><FireIcon size={13} /> {f.bestStreak}</span>
               </button>
             ))}
           </div>
@@ -252,7 +254,7 @@ export default function Friends() {
         {friends === null ? (
           <Skeleton h={180} />
         ) : friends.length === 0 ? (
-          <EmptyState emoji="🤝" title="Pas encore d'amis" text="Trouve un pseudo dans la recherche et envoie une demande." />
+          <EmptyState icon={<UsersIcon size={40} />} title="Pas encore d'amis" text="Trouve un pseudo dans la recherche et envoie une demande." />
         ) : (
           <div className="stack">
             {friends.map((f) => (
@@ -262,13 +264,14 @@ export default function Friends() {
                   <strong>@{f.username}</strong>
                   <span className="muted">
                     {f.habitsCount} habitude{f.habitsCount > 1 ? 's' : ''} ·{' '}
-                    {f.doneToday ? `✓ ${f.doneToday} faite${f.doneToday > 1 ? 's' : ''} aujourd'hui` : "rien encore aujourd'hui"} · 🔥 {f.bestStreak}
+                    {f.doneToday ? `${f.doneToday} faite${f.doneToday > 1 ? 's' : ''} aujourd'hui` : "rien encore aujourd'hui"} ·{' '}
+                    <span className="ic"><FireIcon size={12} /> {f.bestStreak}</span>
                   </span>
                 </div>
                 <div className="row-actions" onClick={(e) => e.stopPropagation()}>
-                  <button className="btn btn-chat" onClick={() => setChatPeer(f)}>💬 Discuter</button>
+                  <button className="btn btn-chat" onClick={() => setChatPeer(f)}><ChatIcon size={16} /> Discuter</button>
                   <button className="btn btn-ghost" onClick={() => navigate(`/u/${f.id}`)}>Voir</button>
-                  <button className="icon-btn danger" onClick={() => setRemoving(f)} title="Retirer">✕</button>
+                  <button className="icon-btn danger" onClick={() => setRemoving(f)} title="Retirer"><XIcon size={16} /></button>
                 </div>
               </div>
             ))}

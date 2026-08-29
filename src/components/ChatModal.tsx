@@ -5,6 +5,7 @@ import { useToast } from '@/components/Toast';
 import { Avatar } from '@/components/ui';
 import { relativeDayLabel } from '@/lib/dates';
 import type { Message } from '@/lib/types';
+import { XIcon, ChatIcon, CheckIcon, CheckDoubleIcon, SendIcon } from '@/lib/icons';
 
 type Peer = { id: string; username: string; avatar_url: string | null };
 
@@ -86,13 +87,13 @@ export function ChatModal({ peer, onClose }: { peer: Peer; onClose: () => void }
             <strong>@{peer.username}</strong>
             <small>Chat privé</small>
           </div>
-          <button className="icon-btn chat-close" onClick={onClose} aria-label="Fermer">✕</button>
+          <button className="icon-btn chat-close" onClick={onClose} aria-label="Fermer"><XIcon size={18} /></button>
         </header>
 
         <div className="chat-body">
           {messages.length === 0 ? (
             <div className="chat-empty">
-              <span className="chat-empty-emoji">👋</span>
+              <span className="chat-empty-emoji"><ChatIcon size={28} /></span>
               <p>Début de la conversation avec @{peer.username}.</p>
             </div>
           ) : (
@@ -108,7 +109,7 @@ export function ChatModal({ peer, onClose }: { peer: Peer; onClose: () => void }
                     <div className="msg-bubble">{m.content}</div>
                     <span className="msg-meta">
                       {fmtTime(m.created_at)}
-                      {mine(m) && <span className="msg-receipt">{m.read_at ? '✓✓' : '✓'}</span>}
+                      {mine(m) && <span className="msg-receipt">{m.read_at ? <CheckDoubleIcon size={13} /> : <CheckIcon size={13} />}</span>}
                     </span>
                   </div>
                 </React.Fragment>
@@ -127,7 +128,7 @@ export function ChatModal({ peer, onClose }: { peer: Peer; onClose: () => void }
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
           />
           <button className="btn btn-primary chat-send" disabled={!text.trim() || sending} onClick={send}>
-            {sending ? '…' : 'Envoyer'}
+            {sending ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <><SendIcon size={15} /> Envoyer</>}
           </button>
         </footer>
       </div>

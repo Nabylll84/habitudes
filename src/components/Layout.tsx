@@ -6,12 +6,13 @@ import { useTheme } from '@/lib/theme';
 import { useToast } from './Toast';
 import { updateUsername } from '@/lib/api';
 import { Modal } from './Modal';
+import { CalendarIcon, CheckCircleIcon, UsersIcon, ChartIcon, SunIcon, MoonIcon, XIcon, DotsIcon, MenuIcon, PencilIcon } from '@/lib/icons';
 
 const NAV = [
-  { to: '/', label: 'Journal', icon: '📅', end: true },
-  { to: '/habits', label: 'Habitudes', icon: '✅' },
-  { to: '/amis', label: 'Amis', icon: '👥' },
-  { to: '/stats', label: 'Stats', icon: '📈' },
+  { to: '/', label: 'Journal', icon: <CalendarIcon size={18} />, end: true },
+  { to: '/habits', label: 'Habitudes', icon: <CheckCircleIcon size={18} /> },
+  { to: '/amis', label: 'Amis', icon: <UsersIcon size={18} /> },
+  { to: '/stats', label: 'Stats', icon: <ChartIcon size={18} /> },
 ];
 
 export function Layout() {
@@ -52,7 +53,7 @@ export function Layout() {
       const updated = await updateUsername(user.id, val);
       setProfile(updated);
       setRenameOpen(false);
-      toast('Pseudo mis à jour ✨');
+      toast('Pseudo mis à jour');
     } catch (e) {
       toast((e as Error).message, 'error');
     } finally {
@@ -72,9 +73,9 @@ export function Layout() {
             title={theme === 'dark' ? 'Passer en clair' : 'Passer en sombre'}
             aria-label="Basculer le thème"
           >
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
           </button>
-          <button className="icon-btn sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Fermer">✕</button>
+          <button className="icon-btn sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Fermer"><XIcon size={18} /></button>
         </div>
         <nav className="side-nav">
           {NAV.map((item) => (
@@ -97,25 +98,25 @@ export function Layout() {
             <small>{user?.app_metadata?.provider === 'google' ? 'Connecté via Google' : user?.email ?? 'Connecté'}</small>
           </div>
           <button className="icon-btn" onClick={() => setMenuOpen((v) => !v)} aria-label="Menu">
-            ⋮
+            <DotsIcon size={18} />
           </button>
           {menuOpen && (
             <div className="user-menu">
-              <button onClick={openRename}>✏️ Changer de pseudo</button>
+              <button onClick={openRename}><PencilIcon size={15} /> Changer de pseudo</button>
               <button className="danger" onClick={onSignOut}>Se déconnecter</button>
             </div>
           )}
         </div>
       </aside>
 
-      <button className="hamburger" onClick={() => setMobileOpen((v) => !v)} aria-label="Menu">☰</button>
+      <button className="hamburger" onClick={() => setMobileOpen((v) => !v)} aria-label="Menu"><MenuIcon size={20} /></button>
       <button
         className="theme-btn-mobile"
         onClick={toggle}
         title={theme === 'dark' ? 'Passer en clair' : 'Passer en sombre'}
         aria-label="Basculer le thème"
       >
-        {theme === 'dark' ? '☀️' : '🌙'}
+        {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
       </button>
 
       <main className="content">
@@ -151,7 +152,7 @@ export function Layout() {
           <div className="modal-actions">
             <button className="btn btn-ghost" onClick={() => setRenameOpen(false)}>Annuler</button>
             <button className="btn btn-primary" disabled={saving} onClick={saveName}>
-              {saving ? '…' : 'Enregistrer'}
+              {saving ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Enregistrer'}
             </button>
           </div>
         </Modal>

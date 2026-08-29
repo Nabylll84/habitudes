@@ -5,6 +5,7 @@ import { useRealtime } from '@/hooks/useRealtime';
 import { useToast } from '@/components/Toast';
 import { Ring, Skeleton, EmptyState } from '@/components/ui';
 import { Heatmap } from '@/components/Heatmap';
+import { HabitIcon, FireIcon, ChartIcon } from '@/lib/icons';
 import type { HabitState } from '@/lib/types';
 import { lastDays, relativeDayLabel, weekdayLabel, toISO, offsetDate } from '@/lib/dates';
 
@@ -64,7 +65,7 @@ export default function Stats() {
           <Skeleton h={120} /><Skeleton h={240} />
         </>
       ) : habits.length === 0 ? (
-        <EmptyState emoji="📊" title="Pas encore de données" text="Crée une habitude et coche quelques jours pour voir tes stats." />
+        <EmptyState icon={<ChartIcon size={40} />} title="Pas encore de données" text="Crée une habitude et coche quelques jours pour voir tes stats." />
       ) : stats ? (
         <>
           <div className="stats-row">
@@ -73,7 +74,7 @@ export default function Stats() {
               <span className="stat-label">coches au total</span>
             </div>
             <div className="stat-card">
-              <span className="stat-num">🔥 {stats.bestStreak}</span>
+              <div className="stat-fire"><FireIcon size={22} /><span className="stat-num">{stats.bestStreak}</span></div>
               <span className="stat-label">meilleure série</span>
             </div>
             <div className="stat-card">
@@ -102,10 +103,10 @@ export default function Stats() {
             {habits.map((h) => (
               <div className="table-row" key={h.habit.id}>
                 <span className="cell-name">
-                  <span className="row-emoji">{h.habit.emoji}</span>
+                  <span className="row-emoji"><HabitIcon emoji={h.habit.emoji} size={22} fallback={h.habit.name.charAt(0)} /></span>
                   <span>{h.habit.name}</span>
                 </span>
-                <span className="cell-streak">🔥 {h.streak}</span>
+                <span className="cell-streak"><FireIcon size={14} /> {h.streak}</span>
                 <span className="cell-total">
                   <b>{h.dates.size}</b> <span className="muted">coches</span>
                 </span>

@@ -6,7 +6,8 @@ import { useRealtime } from '@/hooks/useRealtime';
 import { useToast } from '@/components/Toast';
 import { Modal, Confirm } from '@/components/Modal';
 import { EmptyState, Skeleton } from '@/components/ui';
-import { EMOJIS, COLORS } from '@/lib/types';
+import { COLORS } from '@/lib/types';
+import { HABIT_ICONS, HabitIcon, FireIcon, PencilIcon, TrashIcon, FolderIcon } from '@/lib/icons';
 import type { HabitState, Habit } from '@/lib/types';
 import { lastDays, weekdayLabel, dayNumber, relativeDayLabel } from '@/lib/dates';
 
@@ -19,7 +20,7 @@ export default function Habits() {
 
   // formulaire
   const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('💪');
+  const [emoji, setEmoji] = useState<string>(HABIT_ICONS[0]);
   const [color, setColor] = useState(COLORS[0]);
   const [saving, setSaving] = useState(false);
 
@@ -37,7 +38,7 @@ export default function Habits() {
   useRealtime('completions', 'user_id', user?.id, load);
 
   const openCreate = () => {
-    setName(''); setEmoji('💪'); setColor(COLORS[Math.floor(Math.random() * COLORS.length)]);
+    setName(''); setEmoji(HABIT_ICONS[0]); setColor(COLORS[Math.floor(Math.random() * COLORS.length)]);
     setModal({ editing: null });
   };
   const openEdit = (h: Habit) => {
@@ -59,7 +60,7 @@ export default function Habits() {
       } else {
         const created = await createHabit(user.id, { name: val, emoji, color });
         setHabits((prev) => [...(prev ?? []), created]);
-        toast('Habitude créée 🎉');
+        toast('Habitude créée');
       }
       setModal(null);
     } catch (e) {
@@ -109,7 +110,7 @@ export default function Habits() {
       {habits === null ? (
         <Skeleton h={220} />
       ) : habits.length === 0 ? (
-        <EmptyState emoji="🗂️" title="Aucune habitude" text="Cliquez sur « + Nouvelle » pour créer ta première routine." />
+        <EmptyState icon={<FolderIcon size={40} />} title="Aucune habitude" text="Cliquez sur « + Nouvelle » pour créer ta première routine." />
       ) : (
         <div className="table-card">
           <div className="table-head">
@@ -127,7 +128,7 @@ export default function Habits() {
           {habits.map((h) => (
             <div className="table-row" key={h.habit.id}>
               <span className="cell-name">
-                <span className="row-emoji">{h.habit.emoji}</span>
+                <span className="row-emoji"><HabitIcon emoji={h.habit.emoji} size={22} fallback={h.habit.name.charAt(0)} /></span>
                 <span>{h.habit.name}</span>
               </span>
               {week.map((d) => {
@@ -142,10 +143,10 @@ export default function Habits() {
                   />
                 );
               })}
-              <span className="cell-streak">🔥 {h.streak}</span>
+              <span className="cell-streak"><FireIcon size={14} /> {h.streak}</span>
               <span className="cell-actions">
-                <button className="icon-btn" onClick={() => openEdit(h.habit)} title="Modifier">✏️</button>
-                <button className="icon-btn danger" onClick={() => setConfirmDel(h.habit)} title="Supprimer">🗑️</button>
+                <button className="icon-btn" onClick={() => openEdit(h.habit)} title="Modifier"><PencilIcon size={17} /></button>
+                <button className="icon-btn danger" onClick={() => setConfirmDel(h.habit)} title="Supprimer"><TrashIcon size={17} /></button>
               </span>
             </div>
           ))}
@@ -166,16 +167,17 @@ export default function Habits() {
             />
           </label>
           <label className="field">
-            <span>Émoji</span>
+            <span>Icône</span>
             <div className="emoji-grid">
-              {EMOJIS.map((e) => (
+              {HABIT_ICONS.map((k) => (
                 <button
                   type="button"
-                  key={e}
-                  className={`emoji-opt ${e === emoji ? 'selected' : ''}`}
-                  onClick={() => setEmoji(e)}
+                  key={k}
+                  className={`emoji-opt ${k === emoji ? 'selected' : ''}`}
+                  onClick={() => setEmoji(k)}
+                  aria-label={k}
                 >
-                  {e}
+                  <HabitIcon emoji={k} size={22} />
                 </button>
               ))}
             </div>

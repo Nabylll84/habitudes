@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Logo } from '@/components/ui';
+import { CalendarIcon, FireIcon, UsersIcon, BoltIcon } from '@/lib/icons';
 
 const FEATURES = [
-  { emoji: '📅', text: 'Suis tes habitudes au quotidien' },
-  { emoji: '🔥', text: 'Enchaîne les séries et les streaks' },
-  { emoji: '👥', text: 'Ajoute tes amis, suivez-vous mutuellement' },
-  { emoji: '⚡', text: 'Mises à jour en temps réel' },
+  { icon: <CalendarIcon size={18} />, text: 'Suis tes habitudes au quotidien' },
+  { icon: <FireIcon size={18} />, text: 'Enchaîne les séries et les streaks' },
+  { icon: <UsersIcon size={18} />, text: 'Ajoute tes amis, suivez-vous mutuellement' },
+  { icon: <BoltIcon size={18} />, text: 'Mises à jour en temps réel' },
 ];
 
 type Mode = 'signin' | 'signup';
@@ -107,7 +108,7 @@ export default function Login() {
         <ul className="feature-list">
           {FEATURES.map((f) => (
             <li key={f.text}>
-              <span className="fi">{f.emoji}</span> {f.text}
+              <span className="fi">{f.icon}</span> {f.text}
             </li>
           ))}
         </ul>

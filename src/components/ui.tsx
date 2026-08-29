@@ -1,10 +1,11 @@
 import React from 'react';
 import type { Profile } from '@/lib/types';
+import { BoltIcon } from '@/lib/icons';
 
 export function Logo({ size = 40 }: { size?: number }) {
   return (
-    <div className="logo-mark" style={{ width: size, height: size, fontSize: size * 0.5 }}>
-      ⚡
+    <div className="logo-mark" style={{ width: size, height: size }}>
+      <BoltIcon size={Math.round(size * 0.5)} />
     </div>
   );
 }
@@ -53,18 +54,14 @@ export function Avatar({ profile, size = 40 }: { profile: Pick<Profile, 'usernam
   );
 }
 
-export function SparkIcon() {
-  return <span aria-hidden>✨</span>;
-}
-
 export function Skeleton({ w = '100%', h = 18 }: { w?: number | string; h?: number }) {
   return <div className="skel" style={{ width: w, height: h }} />;
 }
 
-export function EmptyState({ emoji, title, text }: { emoji: string; title: string; text: string }) {
+export function EmptyState({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <div className="empty">
-      <div className="empty-emoji">{emoji}</div>
+      <div className="empty-emoji">{icon}</div>
       <h3>{title}</h3>
       <p>{text}</p>
     </div>

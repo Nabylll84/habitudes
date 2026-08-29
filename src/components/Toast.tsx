@@ -1,4 +1,6 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { CheckIcon, XIcon, InfoIcon } from '@/lib/icons';
 
 type ToastKind = 'success' | 'error' | 'info';
 type Toast = { id: number; kind: ToastKind; msg: string };
@@ -8,7 +10,11 @@ const Ctx = createContext<ToastCtx>({ toast: () => {} });
 
 export const useToast = () => useContext(Ctx);
 
-const ICONS: Record<ToastKind, string> = { success: '✓', error: '✕', info: 'ℹ' };
+const ICONS: Record<ToastKind, ReactNode> = {
+  success: <CheckIcon size={12} />,
+  error: <XIcon size={12} />,
+  info: <InfoIcon size={12} />,
+};
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);

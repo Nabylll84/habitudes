@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { BoltIcon } from '@/lib/icons';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function AuthCallback() {
 
   return (
     <div className="splash">
-      <div className="splash-logo">⚡</div>
+      <div className="splash-logo"><BoltIcon size={32} /></div>
     </div>
   );
 }

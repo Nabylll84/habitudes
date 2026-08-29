@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { Layout } from '@/components/Layout';
+import { BoltIcon } from '@/lib/icons';
 import Login from '@/views/Login';
 import Journal from '@/views/Journal';
 import Habits from '@/views/Habits';
@@ -13,7 +14,7 @@ import AuthCallback from '@/views/AuthCallback';
 function Splash() {
   return (
     <div className="splash">
-      <div className="splash-logo">⚡</div>
+      <div className="splash-logo"><BoltIcon size={32} /></div>
       <div className="splash-bar"><i /></div>
     </div>
   );

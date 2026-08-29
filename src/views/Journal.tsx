@@ -9,6 +9,7 @@ import { Ring, EmptyState, Skeleton } from '@/components/ui';
 import { ToggleHabitCard } from '@/components/HabitCard';
 import type { HabitState } from '@/lib/types';
 import { greeting, longToday, todayISO } from '@/lib/dates';
+import { SproutIcon } from '@/lib/icons';
 
 export default function Journal() {
   const { user, profile } = useAuth();
@@ -39,7 +40,7 @@ export default function Journal() {
     try {
       await toggleHabit(id, date);
       if (next) {
-        const msgs = ['Bien joué ! 🔥', 'Coche ! 🎯', 'Tu assures ✨', 'Streak lancé ⚡', "Rien ne t'arrête 💪"];
+        const msgs = ['Bien joué !', 'Coche !', 'Tu assures', 'Streak lancé', "Rien ne t'arrête"];
         toast(msgs[Math.floor(Math.random() * msgs.length)]);
       }
     } catch (e) {
@@ -57,11 +58,11 @@ export default function Journal() {
       <header className="page-head">
         <div>
           <p className="eyebrow">{longToday()}</p>
-          <h1>{greeting()}{profile ? `, ${profile.username.split(/[_.]/)[0]}` : ''} 👋</h1>
+          <h1>{greeting()}{profile ? `, ${profile.username.split(/[_.]/)[0]}` : ''}</h1>
           {total > 0 && (
             <p className="muted">
               {pct === 1
-                ? 'Tout est fait. Journée parfaite. 🏆'
+                ? 'Tout est fait. Journée parfaite.'
                 : doneCount === 0
                   ? 'Allons-y ! Coche ta première habitude.'
                   : `${doneCount}/${total} habitude${total > 1 ? 's' : ''} cochée${doneCount > 1 ? 's' : ''}`}
@@ -77,7 +78,7 @@ export default function Journal() {
         </div>
       ) : habits.length === 0 ? (
         <EmptyState
-          emoji="🌱"
+          icon={<SproutIcon size={40} />}
           title="Commence ta toute première habitude"
           text="Sport, lecture, eau, méditation… choisis ce que tu veux améliorer."
         />
