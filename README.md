@@ -76,7 +76,7 @@ Sans cela, Google se connecte mais la redirection retourne une erreur.
 
 ## ✨ Fonctionnalités
 
-- 🔐 Connexion **Google OAuth** (pseudo auto-généré, modifiable)
+- 🔐 Connexion **Google OAuth ou email / mot de passe** (pseudo auto-généré, modifiable)
 - 📅 **Journal** du jour : coche tes habitudes, série +7 jours, anneau de progression
 - ✅ **Habitudes** : 7 derniers jours à cocher, éditeur (nom, emoji, couleur)
 - 👥 **Amis** : recherche par pseudo, demandes acceptées/en attente, classement du jour 🏅
