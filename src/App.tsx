@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { Layout } from '@/components/Layout';
@@ -29,14 +29,6 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 export default function App() {
   const { user, loading } = useAuth();
-
-  useEffect(() => {
-    const meta = document.createElement('meta');
-    meta.name = 'theme-color';
-    meta.content = '#f6f7fa';
-    document.head.appendChild(meta);
-    return () => { document.head.removeChild(meta); };
-  }, []);
 
   return (
     <Routes>

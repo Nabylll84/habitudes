@@ -3,9 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b0e1a" />
+    <meta name="theme-color" content="#f6f7fa" />
     <meta name="description" content="HabitFlow — Suis tes habitudes, motive-toi avec tes amis, deviens ta meilleure version." />
     <title>HabitFlow — Tes habitudes, objectif</title>
+    <script>
+      try {
+        var hf = localStorage.getItem('habitflow-theme');
+        var hd = hf ? hf === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', hd ? 'dark' : 'light');
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

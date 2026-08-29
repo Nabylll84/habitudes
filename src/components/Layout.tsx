@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Logo, Avatar } from './ui';
 import { useAuth } from '@/lib/auth';
+import { useTheme } from '@/lib/theme';
 import { useToast } from './Toast';
 import { updateUsername } from '@/lib/api';
 import { Modal } from './Modal';
@@ -15,6 +16,7 @@ const NAV = [
 
 export function Layout() {
   const { user, profile, signOut, setProfile } = useAuth();
+  const { theme, toggle } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -64,6 +66,14 @@ export function Layout() {
         <div className="sidebar-brand">
           <Logo size={34} />
           <span className="brand-name">HabitFlow</span>
+          <button
+            className="icon-btn theme-toggle"
+            onClick={toggle}
+            title={theme === 'dark' ? 'Passer en clair' : 'Passer en sombre'}
+            aria-label="Basculer le thème"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           <button className="icon-btn sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Fermer">✕</button>
         </div>
         <nav className="side-nav">
@@ -99,6 +109,14 @@ export function Layout() {
       </aside>
 
       <button className="hamburger" onClick={() => setMobileOpen((v) => !v)} aria-label="Menu">☰</button>
+      <button
+        className="theme-btn-mobile"
+        onClick={toggle}
+        title={theme === 'dark' ? 'Passer en clair' : 'Passer en sombre'}
+        aria-label="Basculer le thème"
+      >
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
 
       <main className="content">
         <Outlet />
