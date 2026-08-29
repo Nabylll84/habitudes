@@ -2,14 +2,20 @@ import { supabase } from './supabase';
 import {
   Habit,
   HabitState,
+  HabitCompletion,
   Profile,
   FriendRequest,
   FriendOverview,
   ProfileView,
+  Badge,
+  UserBadge,
+  Reaction,
 } from './types';
 import { computeStreak, todayISO, lastDays } from './dates';
 
 type Row = Record<string, unknown>;
+
+const HABIT_COLS = 'id,name,emoji,color,tracking_type,goal_amount,goal_unit,frequency_type,weekdays,times_per_week,challenge_days,start_on,category,sort_order,pinned,visible_shared,streak_freezes,reminder_enabled,reminder_time,reminder_days,created_at';
 
 function errMsg(e: { message: string; hint?: string; code?: string } | null, fallback: string): never {
   throw new Error(e?.message || fallback);
@@ -19,16 +25,23 @@ function errMsg(e: { message: string; hint?: string; code?: string } | null, fal
 
 export async function fetchOwnHabits(uid: string): Promise<HabitState[]> {
   const [hRes, cRes] = await Promise.all([
-    supabase.from('habits').select('id,name,emoji,color').eq('user_id', uid),
-    supabase.from('completions').select('habit_id,date').eq('user_id', uid),
+    supabase.from('habits').select(HABIT_COLS).eq('user_id', uid),
+    supabase.from('completions').select('habit_id,date,value,note').eq('user_id', uid),
   ]);
   if (hRes.error) errMsg(hRes.error, 'Impossible de charger vos habitudes');
 
   const byHabit = new Map<string, Set<string>>();
+  const valsByHabit = new Map<string, Map<string, { value: number; note: string | null }>>();
   for (const row of (cRes.data ?? []) as Row[]) {
     const hid = String(row.habit_id);
+    const d = String(row.date);
     if (!byHabit.has(hid)) byHabit.set(hid, new Set());
-    byHabit.get(hid)!.add(String(row.date));
+    byHabit.get(hid)!.add(d);
+    if (!valsByHabit.has(hid)) valsByHabit.set(hid, new Map());
+    (valsByHabit.get(hid) as Map<string, { value: number; note: string | null }>).set(d, {
+      value: typeof row.value === 'number' ? row.value : Number(row.value ?? 0),
+      note: typeof row.note === 'string' ? row.note : null,
+    });
   }
   const today = todayISO();
   return (hRes.data ?? []).map((h) => {
@@ -38,15 +51,16 @@ export async function fetchOwnHabits(uid: string): Promise<HabitState[]> {
       dates,
       doneToday: dates.has(today),
       streak: computeStreak(dates),
+      values: valsByHabit.get(h.id),
     };
   });
 }
 
-export async function createHabit(uid: string, data: { name: string; emoji: string; color: string }) {
+export async function createHabit(uid: string, data: Partial<Habit> & { name: string; emoji: string; color: string }) {
   const { data: row, error } = await supabase
     .from('habits')
     .insert({ user_id: uid, ...data })
-    .select('id,name,emoji,color')
+    .select(HABIT_COLS)
     .single();
   if (error) errMsg(error, "Impossible de créer l'habitude");
   return { habit: row as Habit, dates: new Set<string>(), doneToday: false, streak: 0 } as HabitState;
@@ -57,7 +71,7 @@ export async function updateHabit(id: string, patch: Partial<Habit>) {
     .from('habits')
     .update(patch)
     .eq('id', id)
-    .select('id,name,emoji,color')
+    .select(HABIT_COLS)
     .single();
   if (error) errMsg(error, "Impossible de modifier l'habitude");
   return row as Habit;
@@ -73,6 +87,35 @@ export async function toggleHabit(habitId: string, date: string) {
   const { data, error } = await supabase.rpc('toggle_habit', { p_habit_id: habitId, p_date: date });
   if (error) errMsg(error, 'Impossible de cocher');
   return { on: data === true, date };
+}
+
+/** Enregistre la valeur d'un compteur pour une date (habitude "amount"). */
+export async function recordHabit(habitId: string, date: string, value: number, note?: string | null) {
+  const { data, error } = await supabase.rpc('record_habit', {
+    p_habit_id: habitId,
+    p_date: date,
+    p_value: value,
+    p_note: note ?? null,
+  });
+  if (error) errMsg(error, "Impossible d'enregistrer");
+  return data === true;
+}
+
+/** Demande au serveur d'attribuer les badges gagnés. Retourne leurs ids. */
+export async function awardBadges(): Promise<string[]> {
+  const { data, error } = await supabase.rpc('maybe_award_badges');
+  if (error) errMsg(error, 'Badges indisponibles');
+  return (data ?? []) as string[];
+}
+
+/** Toutes les complétions de l'utilisateur (export CSV/JSON, stats). */
+export async function fetchCompletions(uid: string): Promise<HabitCompletion[]> {
+  const { data, error } = await supabase
+    .from('completions')
+    .select('id,habit_id,date,value,note')
+    .eq('user_id', uid);
+  if (error) errMsg(error, 'Impossible de charger vos données');
+  return (data ?? []) as HabitCompletion[];
 }
 
 // ---------------------------------------------------------------- amis
@@ -280,7 +323,7 @@ export async function updateUsername(id: string, username: string): Promise<Prof
 export async function fetchProfileView(targetId: string): Promise<ProfileView> {
   const [{ profile, isSelf }, hRes, cRes] = await Promise.all([
     fetchProfile(targetId),
-    supabase.from('habits').select('id,name,emoji,color').eq('user_id', targetId),
+    supabase.from('habits').select(HABIT_COLS).eq('user_id', targetId),
     supabase.from('completions').select('habit_id,date').eq('user_id', targetId),
   ]);
   if (hRes.error || cRes.error) errMsg(null, 'Profil indisponible');
@@ -322,4 +365,54 @@ export async function fetchProfileView(targetId: string): Promise<ProfileView> {
     totalCompletions: dayCount.size,
     weekTotal,
   };
+}
+
+// ---------------------------------------------------------------- badges
+
+/** Catalogue des badges + ceux déjà gagnés par l'utilisateur. */
+export async function fetchBadgesWithProgress(uid: string): Promise<(Badge & { earned: boolean; earned_at: string | null })[]> {
+  const [bRes, uRes] = await Promise.all([
+    supabase.from('badges').select('id,name,description,icon_key'),
+    supabase.from('user_badges').select('badge_id,earned_at').eq('user_id', uid),
+  ]);
+  if (bRes.error) errMsg(bRes.error, 'Badges indisponibles');
+  const owned = new Map(
+    ((uRes.data ?? []) as UserBadge[]).map((b) => [b.badge_id, b.earned_at]),
+  );
+  return (bRes.data ?? [])
+    .map((b) => {
+      const bd = b as Badge;
+      return { ...bd, earned: owned.has(bd.id), earned_at: owned.get(bd.id) ?? null };
+    })
+    .sort((a, b) => Number(b.earned) - Number(a.earned) || a.name.localeCompare(b.name));
+}
+
+// ---------------------------------------------------------------- réactions
+
+/** Réactions posées sur une habitude (tous les amis, encodées par clé). */
+export async function fetchReactions(habitId: string): Promise<Reaction[]> {
+  const { data, error } = await supabase
+    .from('reactions')
+    .select('id,habit_id,from_id,emoji_key,created_at')
+    .eq('habit_id', habitId);
+  if (error) errMsg(error, 'Réactions indisponibles');
+  return (data ?? []) as Reaction[];
+}
+
+/** Pose (ou met à jour) sa réaction sur l'habitude d'un ami. */
+export async function reactToHabit(uid: string, habitId: string, emojiKey: string) {
+  const { error } = await supabase
+    .from('reactions')
+    .upsert({ from_id: uid, habit_id: habitId, emoji_key: emojiKey }, { onConflict: 'from_id,habit_id' });
+  if (error) errMsg(error, "Impossible d'envoyer la réaction");
+}
+
+/** Retire sa réaction d'une habitude. */
+export async function unreactHabit(uid: string, habitId: string) {
+  const { error } = await supabase
+    .from('reactions')
+    .delete()
+    .eq('from_id', uid)
+    .eq('habit_id', habitId);
+  if (error) errMsg(error, 'Impossible de retirer la réaction');
 }

@@ -5,11 +5,40 @@ export const COLORS = [
   '#0ea5e9', '#3b82f6', '#64748b',
 ];
 
+export type TrackingType = 'binary' | 'amount';
+
+export type FrequencyType = 'daily' | 'weekdays' | 'weekly' | 'challenge';
+
 export type Habit = {
   id: string;
   name: string;
   emoji: string;
   color: string;
+  created_at?: string;
+  tracking_type?: TrackingType;
+  goal_amount?: number | null;
+  goal_unit?: string | null;
+  frequency_type?: FrequencyType;
+  weekdays?: number[] | null;
+  times_per_week?: number | null;
+  challenge_days?: number | null;
+  start_on?: string | null;
+  category?: string | null;
+  sort_order?: number;
+  pinned?: boolean;
+  visible_shared?: boolean;
+  streak_freezes?: number;
+  reminder_enabled?: boolean;
+  reminder_time?: string | null;
+  reminder_days?: number[] | null;
+};
+
+export type HabitCompletion = {
+  id: string;
+  habit_id: string;
+  date: string;
+  value: number;
+  note: string | null;
 };
 
 export type Profile = {
@@ -67,4 +96,26 @@ export type HabitData = {
 export type HabitState = HabitData & {
   doneToday: boolean;
   streak: number;
+  /** valeur & note par date (habitudes à compteur) */
+  values?: Map<string, { value: number; note: string | null }>;
+};
+
+export type Badge = {
+  id: string;
+  name: string;
+  description: string;
+  icon_key: string;
+};
+
+export type UserBadge = {
+  badge_id: string;
+  earned_at: string;
+};
+
+export type Reaction = {
+  id: string;
+  habit_id: string;
+  from_id: string;
+  emoji_key: string;
+  created_at: string;
 };
