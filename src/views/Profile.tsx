@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/Toast';
-import { updateUsername } from '@/lib/api';
+import { updateUsername, updateAvatar, removeAvatar, isStorageAvatar } from '@/lib/api';
 import { Avatar } from '@/components/ui';
-import { PencilIcon, LogOutIcon, SunIcon, MoonIcon, MailIcon } from '@/lib/icons';
+import { PencilIcon, LogOutIcon, SunIcon, MoonIcon, MailIcon, CameraIcon, TrashIcon } from '@/lib/icons';
 import { useTheme } from '@/lib/theme';
 
 export function ProfileView() {
@@ -15,6 +15,8 @@ export function ProfileView() {
   const [name, setName] = useState(profile?.username ?? '');
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const saveName = async () => {
     if (!profile || !user) return;
@@ -36,6 +38,36 @@ export function ProfileView() {
     }
   };
 
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !user || uploading) return;
+    setUploading(true);
+    try {
+      const updated = await updateAvatar(user.id, file);
+      setProfile(updated);
+      toast('Photo de profil mise à jour');
+    } catch (err) {
+      toast((err as Error).message, 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onRemoveAvatar = async () => {
+    if (!user || uploading) return;
+    setUploading(true);
+    try {
+      const updated = await removeAvatar(user.id);
+      setProfile(updated);
+      toast('Photo supprimée');
+    } catch (err) {
+      toast((err as Error).message, 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const onSignOut = async () => {
     try {
       setSigningOut(true);
@@ -47,6 +79,8 @@ export function ProfileView() {
     }
   };
 
+  const hasCustom = !!profile?.avatar_url && isStorageAvatar(profile.avatar_url);
+
   return (
     <div className="page">
       <header className="page-head">
@@ -54,7 +88,19 @@ export function ProfileView() {
       </header>
 
       <div className="profile-card">
-        <Avatar profile={profile ?? { username: '?', avatar_url: null }} size={76} />
+        <button
+          type="button"
+          className="avatar-edit"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          aria-label="Changer ma photo de profil"
+        >
+          <Avatar profile={profile ?? { username: '?', avatar_url: null }} size={84} />
+          <span className="avatar-edit-badge">
+            {uploading ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <CameraIcon size={15} />}
+          </span>
+        </button>
+        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={onPickFile} />
         <h2>@{profile?.username ?? '…'}</h2>
         {user?.email && (
           <p className="profile-email"><MailIcon size={14} /> {user.email}</p>
@@ -62,6 +108,11 @@ export function ProfileView() {
         <small className="muted">
           {user?.app_metadata?.provider === 'google' ? 'Connecté via Google' : 'Compte email'}
         </small>
+        {hasCustom && !uploading && (
+          <button className="btn btn-ghost btn-sm" onClick={onRemoveAvatar}>
+            <TrashIcon size={14} /> Retirer la photo
+          </button>
+        )}
       </div>
 
       <div className="profile-section">

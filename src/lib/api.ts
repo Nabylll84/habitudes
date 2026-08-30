@@ -337,6 +337,63 @@ export async function updateUsername(id: string, username: string): Promise<Prof
   return data as Profile;
 }
 
+const AVATAR_BASE = supabase.storage.from('avatars').getPublicUrl('x').data.publicUrl.slice(0, -1);
+
+export function isStorageAvatar(url: string): boolean {
+  return url.startsWith(AVATAR_BASE);
+}
+
+export async function updateAvatar(id: string, file: File): Promise<Profile> {
+  if (file.size > 2 * 1024 * 1024) throw new Error('Photo trop lourde (2 Mo max)');
+  const ext = /\.(jpe?g|png|webp|gif)$/i.test(file.name)
+    ? file.name.split('.').pop()!.toLowerCase()
+    : 'jpg';
+  const path = `${id}/avatar-${Date.now()}.${ext}`;
+
+  const { profile: before } = await fetchProfile(id);
+  const old = before.avatar_url && isStorageAvatar(before.avatar_url)
+    ? before.avatar_url.slice(AVATAR_BASE.length)
+    : null;
+
+  const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (upErr) errMsg(upErr, "Impossible d'envoyer la photo");
+
+  const url = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ avatar_url: url })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) {
+    await supabase.storage.from('avatars').remove([path]).catch(() => {});
+    errMsg(error, 'Mise à jour impossible');
+  }
+
+  if (old) await supabase.storage.from('avatars').remove([old]).catch(() => {});
+  return data as Profile;
+}
+
+export async function removeAvatar(id: string): Promise<Profile> {
+  const { profile } = await fetchProfile(id);
+  let old: string | null = null;
+  if (profile.avatar_url && isStorageAvatar(profile.avatar_url)) {
+    old = profile.avatar_url.slice(AVATAR_BASE.length);
+  }
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ avatar_url: null })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) errMsg(error, 'Mise à jour impossible');
+  if (old) await supabase.storage.from('avatars').remove([old]).catch(() => {});
+  return data as Profile;
+}
+
 export async function fetchProfileView(targetId: string): Promise<ProfileView> {
   const [{ profile, isSelf }, hRes, cRes] = await Promise.all([
     fetchProfile(targetId),

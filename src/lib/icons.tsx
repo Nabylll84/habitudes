@@ -172,6 +172,9 @@ export function InfoIcon(p: IconProps) {
 export function UserIcon(p: IconProps) {
   return <Svg {...p}><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 0 0-16 0" /></Svg>;
 }
+export function CameraIcon(p: IconProps) {
+  return <Svg {...p}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="14" r="4" /></Svg>;
+}
 export function LogOutIcon(p: IconProps) {
   return <Svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></Svg>;
 }

@@ -1387,6 +1387,30 @@ textarea:-webkit-autofill, select:-webkit-autofill {
   box-shadow: var(--shadow);
   text-align: center;
 }
+.avatar-edit {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  line-height: 0;
+}
+.avatar-edit:focus-visible { outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); border-radius: 50%; }
+.avatar-edit:disabled { cursor: default; }
+.avatar-edit-badge {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--grad);
+  color: #fff;
+  border: 2.5px solid var(--surface);
+  display: grid; place-items: center;
+  box-shadow: 0 4px 10px -3px rgba(91, 105, 224, 0.6);
+  transition: transform 0.12s;
+}
+.avatar-edit:hover .avatar-edit-badge { transform: scale(1.1); }
 .profile-email { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.88rem; }
 .profile-section {
   background: var(--surface);
