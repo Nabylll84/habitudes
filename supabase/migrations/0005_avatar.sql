@@ -3,10 +3,14 @@
 -- Exécuter après 0004 dans : Supabase Dashboard -> SQL Editor
 -- ============================================================
 
--- Bucket public : les photos sont servies via URL publique
+-- Bucket public : les photos sont servies via URL publique.
+-- update ... where id : garantit qu'un bucket déjà créé (ex. à la main, privé)
+-- est bien passé en public au (ré)exécution de la migration.
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
+
+update storage.buckets set public = true where id = 'avatars';
 
 -- Lecture publique (nécessaire pour les avatars d'amis)
 drop policy if exists "avatars_select_all" on storage.objects;

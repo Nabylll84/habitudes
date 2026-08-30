@@ -337,10 +337,29 @@ export async function updateUsername(id: string, username: string): Promise<Prof
   return data as Profile;
 }
 
-const AVATAR_BASE = supabase.storage.from('avatars').getPublicUrl('x').data.publicUrl.slice(0, -1);
+const AVATAR_BASE = supabase.storage
+  .from('avatars')
+  .getPublicUrl('x')
+  .data.publicUrl
+  .replace(/\/x$/, '')
+  .replace(/\/storage\/v1\/object\/([^/]+)\/avatars$/, '/storage/v1/object/public/avatars');
+
+function publicAvatarUrl(path: string): string {
+  return `${AVATAR_BASE}/${path}`;
+}
+
+/** Extrait le chemin de stockage à partir d'une URL d'avatar (formats public/legacy). */
+function storagePathOf(url: string): string | null {
+  try {
+    const m = new URL(url).pathname.match(/\/storage\/v1\/object\/(?:public\/)?avatars\/(.+)$/);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
 
 export function isStorageAvatar(url: string): boolean {
-  return url.startsWith(AVATAR_BASE);
+  return storagePathOf(url) !== null;
 }
 
 export async function updateAvatar(id: string, file: File): Promise<Profile> {
@@ -351,9 +370,7 @@ export async function updateAvatar(id: string, file: File): Promise<Profile> {
   const path = `${id}/avatar-${Date.now()}.${ext}`;
 
   const { profile: before } = await fetchProfile(id);
-  const old = before.avatar_url && isStorageAvatar(before.avatar_url)
-    ? before.avatar_url.slice(AVATAR_BASE.length)
-    : null;
+  const old = before.avatar_url ? storagePathOf(before.avatar_url) : null;
 
   const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
     cacheControl: '3600',
@@ -361,7 +378,7 @@ export async function updateAvatar(id: string, file: File): Promise<Profile> {
   });
   if (upErr) errMsg(upErr, "Impossible d'envoyer la photo");
 
-  const url = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  const url = publicAvatarUrl(path);
   const { data, error } = await supabase
     .from('profiles')
     .update({ avatar_url: url })
@@ -379,10 +396,8 @@ export async function updateAvatar(id: string, file: File): Promise<Profile> {
 
 export async function removeAvatar(id: string): Promise<Profile> {
   const { profile } = await fetchProfile(id);
-  let old: string | null = null;
-  if (profile.avatar_url && isStorageAvatar(profile.avatar_url)) {
-    old = profile.avatar_url.slice(AVATAR_BASE.length);
-  }
+  const old = profile.avatar_url ? storagePathOf(profile.avatar_url) : null;
+
   const { data, error } = await supabase
     .from('profiles')
     .update({ avatar_url: null })
