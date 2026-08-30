@@ -364,7 +364,25 @@ textarea:-webkit-autofill, select:-webkit-autofill {
   letter-spacing: 0.035em; text-transform: uppercase;
   color: var(--muted);
 }
+.field small {
+  text-transform: none; letter-spacing: 0;
+  font-size: 0.72rem; font-weight: 600;
+  opacity: 0.75;
+}
 .field-hint { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+
+.lead-input { display: flex; align-items: stretch; gap: 10px; }
+.lead-input input { flex: 1; min-width: 0; }
+.lead-emoji {
+  width: 46px; height: 46px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.lead-emoji:hover { border-color: var(--accent); transform: scale(1.05); }
+.lead-emoji svg { display: block; }
 
 /* ---------- Avatar / Ring / Skeleton ---------- */
 .avatar { border-radius: 50%; object-fit: cover; }

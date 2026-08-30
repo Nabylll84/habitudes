@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createHabit, updateHabit } from '@/lib/api';
 import { useToast } from '@/components/Toast';
 import { Modal } from '@/components/Modal';
-import { HabitIcon, PencilIcon, InfoIcon } from '@/lib/icons';
+import { HabitIcon, PinIcon, UsersIcon, HourglassIcon, SendIcon, CalendarIcon, InfoIcon } from '@/lib/icons';
 import { COLORS } from '@/lib/types';
 import { HABIT_ICONS } from '@/lib/icons';
 import { todayISO } from '@/lib/dates';
@@ -135,14 +135,30 @@ export function HabitFormModal({
       <div className="form-grid">
         <label className="field form-span-2">
           <span>Nom</span>
-          <input
-            autoFocus
-            value={f.name}
-            maxLength={60}
-            placeholder="Ex : Boire de l'eau, Lire 20 min…"
-            onChange={(e) => set('name', e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && save()}
-          />
+          <div className="lead-input">
+            <button
+              type="button"
+              className="lead-emoji"
+              style={{ background: `color-mix(in srgb, ${f.color} 16%, var(--surface))`, color: f.color }}
+              onClick={() => {
+                const key = f.emoji as (typeof HABIT_ICONS)[number];
+                const next = HABIT_ICONS[(HABIT_ICONS.indexOf(key) + 1) % HABIT_ICONS.length];
+                set('emoji', next);
+              }}
+              aria-label="Changer d'icône"
+              title="Changer d'icône"
+            >
+              <HabitIcon emoji={f.emoji} size={20} />
+            </button>
+            <input
+              autoFocus
+              value={f.name}
+              maxLength={60}
+              placeholder="Ex : Boire de l'eau, Lire 20 min…"
+              onChange={(e) => set('name', e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && save()}
+            />
+          </div>
         </label>
 
         <label className="field form-span-2">
@@ -302,26 +318,26 @@ export function HabitFormModal({
           <span>Options</span>
           <div className="opt-list">
             <label className="opt-row">
-              <span><PencilIcon size={14} /> Épingler en haut</span>
+              <span><PinIcon size={14} /> Épingler en haut</span>
               <input type="checkbox" checked={f.pinned} onChange={(e) => set('pinned', e.target.checked)} />
             </label>
             <label className="opt-row">
-              <span><PencilIcon size={14} /> Visible par mes amis</span>
+              <span><UsersIcon size={14} /> Visible par mes amis</span>
               <input type="checkbox" checked={f.visible} onChange={(e) => set('visible', e.target.checked)} />
             </label>
             <div className="opt-row">
-              <span><PencilIcon size={14} /> Jokers (protègent la série)</span>
+              <span><HourglassIcon size={14} /> Jokers (protègent la série)</span>
               <select value={f.freezes} onChange={(e) => set('freezes', Number(e.target.value))} className="mini-select">
                 {[0, 1, 2, 3, 5].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div className="opt-row">
-              <span><PencilIcon size={14} /> Rappel par email</span>
+              <span><SendIcon size={14} /> Rappel par email</span>
               <input type="checkbox" checked={f.remind} onChange={(e) => set('remind', e.target.checked)} />
             </div>
             {f.remind && (
               <div className="opt-row">
-                <span>À quelle heure ?</span>
+                <span><CalendarIcon size={14} /> À quelle heure ?</span>
                 <input type="time" value={f.remindTime} onChange={(e) => set('remindTime', e.target.value)} className="mini-time" />
               </div>
             )}
