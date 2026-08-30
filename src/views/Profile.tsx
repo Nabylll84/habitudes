@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/Toast';
 import { updateUsername, updateAvatar, removeAvatar, isStorageAvatar } from '@/lib/api';
 import { Avatar } from '@/components/ui';
+import { ImageCropModal, type CropMime } from '@/components/ImageCropModal';
 import { PencilIcon, LogOutIcon, SunIcon, MoonIcon, MailIcon, CameraIcon, TrashIcon } from '@/lib/icons';
 import { useTheme } from '@/lib/theme';
 
@@ -16,7 +17,10 @@ export function ProfileView() {
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cropName = useRef('');
+  const cropMime = useRef<CropMime>('image/jpeg');
 
   const saveName = async () => {
     if (!profile || !user) return;
@@ -38,14 +42,33 @@ export function ProfileView() {
     }
   };
 
-  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !user || uploading) return;
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Photo trop lourde (2 Mo max)', 'error');
+      return;
+    }
+    cropName.current = file.name;
+    cropMime.current = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    setCropSrc(URL.createObjectURL(file));
+  };
+
+  const closeCrop = () => {
+    setCropSrc((s) => {
+      if (s) URL.revokeObjectURL(s);
+      return null;
+    });
+  };
+
+  const onCropped = async (file: File) => {
+    if (!user || uploading) return;
     setUploading(true);
     try {
       const updated = await updateAvatar(user.id, file);
       setProfile(updated);
+      closeCrop();
       toast('Photo de profil mise à jour');
     } catch (err) {
       toast((err as Error).message, 'error');
@@ -147,6 +170,16 @@ export function ProfileView() {
           {signingOut ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <><LogOutIcon size={15} /> Se déconnecter</>}
         </button>
       </div>
+
+      {cropSrc && (
+        <ImageCropModal
+          src={cropSrc}
+          name={cropName.current}
+          mime={cropMime.current}
+          onCancel={closeCrop}
+          onComplete={onCropped}
+        />
+      )}
     </div>
   );
 }
