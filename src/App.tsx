@@ -10,6 +10,7 @@ import Habits from '@/views/Habits';
 import Friends from '@/views/Friends';
 import FriendProfile from '@/views/FriendProfile';
 import Stats from '@/views/Stats';
+import Badges from '@/views/Badges';
 import AuthCallback from '@/views/AuthCallback';
 
 function Splash() {
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/amis" element={<Friends />} />
         <Route path="/u/:id" element={<FriendProfile />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/badges" element={<Badges />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

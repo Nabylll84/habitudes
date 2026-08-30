@@ -11,7 +11,7 @@ import {
   UserBadge,
   Reaction,
 } from './types';
-import { computeStreak, todayISO, lastDays } from './dates';
+import { computeStreak, computeHabitStreak, todayISO, lastDays } from './dates';
 
 type Row = Record<string, unknown>;
 
@@ -30,28 +30,35 @@ export async function fetchOwnHabits(uid: string): Promise<HabitState[]> {
   ]);
   if (hRes.error) errMsg(hRes.error, 'Impossible de charger vos habitudes');
 
-  const byHabit = new Map<string, Set<string>>();
   const valsByHabit = new Map<string, Map<string, { value: number; note: string | null }>>();
   for (const row of (cRes.data ?? []) as Row[]) {
     const hid = String(row.habit_id);
     const d = String(row.date);
-    if (!byHabit.has(hid)) byHabit.set(hid, new Set());
-    byHabit.get(hid)!.add(d);
+    const value = typeof row.value === 'number' ? row.value : Number(row.value ?? 0);
+    const note = typeof row.note === 'string' ? row.note : null;
     if (!valsByHabit.has(hid)) valsByHabit.set(hid, new Map());
-    (valsByHabit.get(hid) as Map<string, { value: number; note: string | null }>).set(d, {
-      value: typeof row.value === 'number' ? row.value : Number(row.value ?? 0),
-      note: typeof row.note === 'string' ? row.note : null,
-    });
+    (valsByHabit.get(hid) as Map<string, { value: number; note: string | null }>).set(d, { value, note });
   }
   const today = todayISO();
   return (hRes.data ?? []).map((h) => {
-    const dates = byHabit.get(h.id) ?? new Set<string>();
+    const habit = h as Habit;
+    const vals = valsByHabit.get(habit.id) ?? new Map();
+    const done = (d: string) => {
+      const v = vals.get(d);
+      if (!v) return false;
+      if (habit.tracking_type === 'amount') {
+        const goal = habit.goal_amount ?? null;
+        return goal == null ? v.value > 0 : v.value >= goal;
+      }
+      return true;
+    };
+    const dates = new Set<string>([...vals.keys()].filter((d) => done(d)));
     return {
-      habit: h as Habit,
+      habit,
       dates,
       doneToday: dates.has(today),
-      streak: computeStreak(dates),
-      values: valsByHabit.get(h.id),
+      streak: computeHabitStreak(habit, dates).streak,
+      values: vals,
     };
   });
 }
@@ -99,6 +106,16 @@ export async function recordHabit(habitId: string, date: string, value: number, 
   });
   if (error) errMsg(error, "Impossible d'enregistrer");
   return data === true;
+}
+
+/** Met à jour la note d'une complétion (habitude binaire ou compteur). */
+export async function updateCompletionNote(habitId: string, date: string, note: string | null) {
+  const { error } = await supabase.rpc('update_completion_note', {
+    p_habit_id: habitId,
+    p_date: date,
+    p_note: note,
+  });
+  if (error) errMsg(error, "Impossible de modifier la note");
 }
 
 /** Demande au serveur d'attribuer les badges gagnés. Retourne leurs ids. */

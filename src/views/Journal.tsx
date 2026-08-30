@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { fetchOwnHabits, toggleHabit } from '@/lib/api';
-import { toggleInList } from '@/lib/optimistic';
+import { fetchOwnHabits, toggleHabit, recordHabit } from '@/lib/api';
+import { flipHabit, setHabitValue } from '@/lib/optimistic';
 import { useRealtime } from '@/hooks/useRealtime';
 import { useToast } from '@/components/Toast';
 import { Ring, EmptyState, Skeleton } from '@/components/ui';
-import { ToggleHabitCard } from '@/components/HabitCard';
+import { HabitLogModal } from '@/components/HabitLogModal';
+import { JournalHabitCard } from '@/components/JournalHabitCard';
 import type { HabitState } from '@/lib/types';
 import { greeting, longToday, todayISO } from '@/lib/dates';
 import { SproutIcon } from '@/lib/icons';
@@ -16,12 +17,14 @@ export default function Journal() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [habits, setHabits] = useState<HabitState[] | null>(null);
+  const [logHabit, setLogHabit] = useState<HabitState | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
     try {
       const data = await fetchOwnHabits(user.id);
       setHabits(data);
+      setLogHabit((prev) => (prev ? data.find((h) => h.habit.id === prev.habit.id) ?? null : null));
     } catch (e) {
       toast((e as Error).message, 'error');
     }
@@ -31,20 +34,30 @@ export default function Journal() {
   useRealtime('habits', 'user_id', user?.id, load);
   useRealtime('completions', 'user_id', user?.id, load);
 
-  const onToggle = async (h: HabitState) => {
-    if (!user) return;
-    const id = h.habit.id;
+  const onToggleDay = async (hs: HabitState) => {
+    const id = hs.habit.id;
     const date = todayISO();
-    const next = !h.doneToday;
-    setHabits((prev) => (prev ? toggleInList(prev, id) : prev));
+    const next = !hs.doneToday;
+    setHabits((prev) => (prev ? flipHabit(prev, hs.habit, date, next) : prev));
     try {
       await toggleHabit(id, date);
-      if (next) {
-        const msgs = ['Bien joué !', 'Coche !', 'Tu assures', 'Streak lancé', "Rien ne t'arrête"];
-        toast(msgs[Math.floor(Math.random() * msgs.length)]);
+    } catch (e) {
+      setHabits((prev) => (prev ? flipHabit(prev, hs.habit, date, !next) : prev));
+      toast((e as Error).message, 'error');
+    }
+  };
+
+  const onRecordValue = async (hs: HabitState, date: string, value: number, note?: string | null) => {
+    const id = hs.habit.id;
+    setHabits((prev) => (prev ? setHabitValue(prev, id, date, value, note) : prev));
+    try {
+      if (value === 0) {
+        await toggleHabit(id, date);
+      } else {
+        await recordHabit(id, date, value, note ?? null);
       }
     } catch (e) {
-      setHabits((prev) => (prev ? toggleInList(prev, id) : prev));
+      setHabits((prev) => (prev ? setHabitValue(prev, id, date, value, note) : prev));
       toast((e as Error).message, 'error');
     }
   };
@@ -65,7 +78,7 @@ export default function Journal() {
                 ? 'Tout est fait. Journée parfaite.'
                 : doneCount === 0
                   ? 'Allons-y ! Coche ta première habitude.'
-                  : `${doneCount}/${total} habitude${total > 1 ? 's' : ''} cochée${doneCount > 1 ? 's' : ''}`}
+                  : `${doneCount}/${total} habitude${total > 1 ? 's' : ''} validée${doneCount > 1 ? 's' : ''}`}
             </p>
           )}
         </div>
@@ -74,7 +87,7 @@ export default function Journal() {
 
       {habits === null ? (
         <div className="card-grid">
-          <Skeleton h={190} /><Skeleton h={190} /><Skeleton h={190} />
+          <Skeleton h={210} /><Skeleton h={210} /><Skeleton h={210} />
         </div>
       ) : habits.length === 0 ? (
         <EmptyState
@@ -85,7 +98,13 @@ export default function Journal() {
       ) : (
         <div className="card-grid">
           {habits.map((h) => (
-            <ToggleHabitCard key={h.habit.id} habit={h} onToggle={onToggle} />
+            <JournalHabitCard
+              key={h.habit.id}
+              habit={h}
+              onToggleDay={onToggleDay}
+              onRecordValue={onRecordValue}
+              onOpenLog={setLogHabit}
+            />
           ))}
         </div>
       )}
@@ -95,6 +114,8 @@ export default function Journal() {
           + Ajouter une habitude
         </button>
       )}
+
+      {logHabit && <HabitLogModal habit={logHabit} onClose={() => setLogHabit(null)} onMutated={load} />}
     </div>
   );
 }

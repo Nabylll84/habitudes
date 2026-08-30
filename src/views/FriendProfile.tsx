@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { fetchProfileView, removeFriend, areFriends } from '@/lib/api';
+import { fetchProfileView, removeFriend, areFriends, fetchReactions, reactToHabit, unreactHabit } from '@/lib/api';
 import { useRealtime } from '@/hooks/useRealtime';
 import { useToast } from '@/components/Toast';
 import { Avatar, Skeleton, EmptyState } from '@/components/ui';
 import { Heatmap } from '@/components/Heatmap';
-import { ProfileHabitCard } from '@/components/HabitCard';
+import { FriendHabitCard } from '@/components/FriendHabitCard';
 import { Confirm } from '@/components/Modal';
 import { ChatModal } from '@/components/ChatModal';
 import { LockIcon, ArrowLeftIcon, ChatIcon } from '@/lib/icons';
-import type { ProfileView } from '@/lib/types';
+import type { ProfileView, Reaction } from '@/lib/types';
 import { shortDate } from '@/lib/dates';
+
+function ReactionSub({ id, onEvent }: { id: string; onEvent: () => void }) {
+  useRealtime('reactions', 'habit_id', id, onEvent);
+  return null;
+}
 
 export default function FriendProfile() {
   const { id } = useParams();
@@ -21,8 +26,14 @@ export default function FriendProfile() {
 
   const [view, setView] = useState<ProfileView | null>(null);
   const [canView, setCanView] = useState(true);
+  const [reactions, setReactions] = useState<Map<string, Reaction[]>>(new Map());
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const loadReactions = useCallback(async (habitIds: string[]) => {
+    const entries = await Promise.all(habitIds.map(async (hid) => [hid, await fetchReactions(hid).catch(() => [] as Reaction[])] as const));
+    setReactions(new Map(entries));
+  }, []);
 
   const load = useCallback(async () => {
     if (!user || !id) return;
@@ -31,14 +42,40 @@ export default function FriendProfile() {
       const isFriend = v.isSelf || (await areFriends(user.id, id));
       setView(v);
       setCanView(isFriend);
+      await loadReactions(v.habits.map((h) => h.id));
     } catch {
       setCanView(false);
     }
-  }, [user, id]);
+  }, [user, id, loadReactions]);
 
   useEffect(() => { load(); }, [load]);
   useRealtime('completions', 'user_id', id, load);
   useRealtime('habits', 'user_id', id, load);
+
+  const afterMutation = async () => {
+    if (view) await loadReactions(view.habits.map((h) => h.id));
+  };
+
+  const onReact = async (habitId: string, key: string) => {
+    if (!user) return;
+    try {
+      await reactToHabit(user.id, habitId, key);
+      await afterMutation();
+      toast('Encouragement envoyé !');
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    }
+  };
+
+  const onUnreact = async (habitId: string) => {
+    if (!user) return;
+    try {
+      await unreactHabit(user.id, habitId);
+      await afterMutation();
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    }
+  };
 
   const onRemove = async () => {
     if (!user || !id) return;
@@ -79,6 +116,10 @@ export default function FriendProfile() {
     <div className="page">
       <button className="back-btn" onClick={() => navigate(-1)}><ArrowLeftIcon size={15} /> Retour</button>
 
+      {view.habits.map((h) => (
+        <ReactionSub key={h.id} id={h.id} onEvent={() => afterMutation()} />
+      ))}
+
       <div className="profile-header">
         <Avatar profile={view.profile} size={72} />
         <div>
@@ -118,9 +159,26 @@ export default function FriendProfile() {
         <p className="muted">Aucune habitude partagée pour l'instant.</p>
       ) : (
         <div className="card-grid">
-          {view.habits.map((h) => (
-            <ProfileHabitCard key={h.id} habit={h} />
-          ))}
+          {view.habits.map((h) => {
+            const habit = {
+              id: h.id,
+              name: h.name,
+              emoji: h.emoji,
+              color: h.color,
+              doneToday: h.doneToday,
+              streak: h.streak,
+            };
+            return user ? (
+              <FriendHabitCard
+                key={h.id}
+                habit={habit}
+                uid={user.id}
+                reactions={reactions.get(h.id) ?? []}
+                onReact={(key) => onReact(h.id, key)}
+                onUnreact={() => onUnreact(h.id)}
+              />
+            ) : null;
+          })}
         </div>
       )}
 

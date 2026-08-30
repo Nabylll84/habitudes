@@ -131,6 +131,9 @@ export function HeartIcon(p: IconProps) {
 export function FolderIcon(p: IconProps) {
   return <Svg {...p}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></Svg>;
 }
+export function PinIcon(p: IconProps) {
+  return <Svg {...p}><path d="M9 3v6l-2 2v2h10v-2l-2-2V3" /><path d="M12 13v8" /></Svg>;
+}
 export function SproutIcon(p: IconProps) {
   return (
     <Svg {...p}>
@@ -160,11 +163,17 @@ export function ChatIcon(p: IconProps) {
 export function PlusIcon(p: IconProps) {
   return <Svg {...p}><path d="M12 5v14M5 12h14" /></Svg>;
 }
+export function MinusIcon(p: IconProps) {
+  return <Svg {...p}><path d="M5 12h14" /></Svg>;
+}
 export function InfoIcon(p: IconProps) {
   return <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></Svg>;
 }
 export function ArrowLeftIcon(p: IconProps) {
   return <Svg {...p}><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></Svg>;
+}
+export function DownloadIcon(p: IconProps) {
+  return <Svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" /></Svg>;
 }
 
 // ------------------------------------------------------------------ alertes / émojis -> icônes du formulaire

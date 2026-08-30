@@ -6,13 +6,14 @@ import { useTheme } from '@/lib/theme';
 import { useToast } from './Toast';
 import { updateUsername } from '@/lib/api';
 import { Modal } from './Modal';
-import { CalendarIcon, CheckCircleIcon, UsersIcon, ChartIcon, SunIcon, MoonIcon, XIcon, DotsIcon, MenuIcon, PencilIcon } from '@/lib/icons';
+import { CalendarIcon, CheckCircleIcon, UsersIcon, ChartIcon, TrophyIcon, SunIcon, MoonIcon, XIcon, DotsIcon, MenuIcon, PencilIcon } from '@/lib/icons';
 
 const NAV = [
   { to: '/', label: 'Journal', icon: <CalendarIcon size={18} />, end: true },
   { to: '/habits', label: 'Habitudes', icon: <CheckCircleIcon size={18} /> },
   { to: '/amis', label: 'Amis', icon: <UsersIcon size={18} /> },
   { to: '/stats', label: 'Stats', icon: <ChartIcon size={18} /> },
+  { to: '/badges', label: 'Trophées', icon: <TrophyIcon size={18} /> },
 ];
 
 export function Layout() {
