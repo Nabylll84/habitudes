@@ -10,6 +10,9 @@ import {
   Badge,
   UserBadge,
   Reaction,
+  CalendarEvent,
+  CalendarEventInput,
+  CalendarStatus,
 } from './types';
 import { computeStreak, computeHabitStreak, todayISO, lastDays, currentWeek } from './dates';
 
@@ -504,4 +507,91 @@ export async function unreactHabit(uid: string, habitId: string) {
     .eq('from_id', uid)
     .eq('habit_id', habitId);
   if (error) errMsg(error, 'Impossible de retirer la réaction');
+}
+
+// ---------------------------------------------------------------- agenda
+
+const EVENT_COLS =
+  'id,user_id,title,description,location,color,all_day,starts_at,ends_at,g_event_id,g_readonly,g_dirty,created_at,updated_at';
+
+/** Événements qui chevauchent la plage [from, to] (bornes ISO incluses). */
+export async function fetchEventsInRange(from: string, to: string): Promise<CalendarEvent[]> {
+  const { data, error } = await supabase.rpc('events_in_range', {
+    p_from: from,
+    p_to: to,
+  });
+  if (error) errMsg(error, 'Impossible de charger les événements');
+  return ((data ?? []) as Row[]).map((r) => ({
+    ...r,
+    all_day: Boolean(r.all_day),
+    g_readonly: Boolean(r.g_readonly),
+    g_dirty: Boolean(r.g_dirty),
+  })) as CalendarEvent[];
+}
+
+export async function createEvent(uid: string, input: CalendarEventInput): Promise<CalendarEvent> {
+  const { data, error } = await supabase
+    .from('events')
+    .insert({
+      user_id: uid,
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      location: input.location?.trim() || null,
+      color: input.color ?? null,
+      all_day: input.all_day,
+      starts_at: input.starts_at,
+      ends_at: input.ends_at,
+      g_dirty: true,
+    })
+    .select(EVENT_COLS)
+    .single();
+  if (error) errMsg(error, "Impossible de créer l'événement");
+  return data as CalendarEvent;
+}
+
+/** Les événements liés à Google (identifiant + version) sont gérés par la sync. */
+export async function updateEvent(id: string, patch: Partial<CalendarEventInput>): Promise<CalendarEvent> {
+  const title = patch.title?.trim();
+  if (title === '') errMsg(null, "Le titre ne peut pas être vide");
+  if (patch.starts_at && patch.ends_at && new Date(patch.ends_at) < new Date(patch.starts_at)) {
+    errMsg(null, 'La fin ne peut pas précéder le début');
+  }
+  const clean = {
+    ...patch,
+    ...(title !== undefined ? { title } : {}),
+    ...('description' in patch ? { description: patch.description?.trim() || null } : {}),
+    ...('location' in patch ? { location: patch.location?.trim() || null } : {}),
+    g_dirty: true,
+  };
+  const { data, error } = await supabase
+    .from('events')
+    .update(clean)
+    .eq('id', id)
+    .select(EVENT_COLS)
+    .single();
+  if (error) errMsg(error, "Impossible de modifier l'événement");
+  return data as CalendarEvent;
+}
+
+/** Suppression logique : l'événement disparaît de l'interface puis part chez Google. */
+export async function deleteEvent(id: string): Promise<void> {
+  const { error } = await supabase.rpc('soft_delete_event', { p_event_id: id });
+  if (error) errMsg(error, "Impossible de supprimer l'événement");
+}
+
+/** État de la connexion Google Calendar (aucun secret exposé). */
+export async function fetchCalendarStatus(): Promise<CalendarStatus> {
+  const { data, error } = await supabase.rpc('calendar_connection_status');
+  if (error) errMsg(error, 'État de la connexion indisponible');
+  const row = ((data ?? []) as Row[])[0];
+  if (!row) {
+    return { connected: false, account_email: null, calendar_id: null, last_sync_at: null, last_error: null };
+  }
+  return {
+    connected: true,
+    account_email: (row.account_email as string) ?? null,
+    calendar_id: (row.calendar_id as string) ?? 'primary',
+    last_sync_at: (row.last_sync_at as string) ?? null,
+    last_error: (row.last_error as string) ?? null,
+  };
 }

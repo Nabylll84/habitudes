@@ -66,6 +66,10 @@ export function SendIcon(p: IconProps) {
 export function CalendarIcon(p: IconProps) {
   return <Svg {...p}><rect x="3" y="4" width="18" height="17" rx="2.5" /><path d="M16 2v4M8 2v4M3 10h18" /></Svg>;
 }
+/** Agenda : un cadran, à distinguer de CalendarIcon (Journal). */
+export function ClockIcon(p: IconProps) {
+  return <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 6.8V12l3.4 2" /></Svg>;
+}
 export function CheckCircleIcon(p: IconProps) {
   return <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 5-5" /></Svg>;
 }

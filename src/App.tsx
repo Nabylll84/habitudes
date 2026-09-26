@@ -6,6 +6,7 @@ import { BoltIcon } from '@/lib/icons';
 import Login from '@/views/Login';
 import Landing from '@/views/Landing';
 import Journal from '@/views/Journal';
+import Agenda from '@/views/Agenda';
 import Habits from '@/views/Habits';
 import Friends from '@/views/Friends';
 import FriendProfile from '@/views/FriendProfile';
@@ -55,6 +56,7 @@ export default function App() {
           </RequireAuth>
         }
       >
+        <Route path="/agenda" element={<Agenda />} />
         <Route path="/habits" element={<Habits />} />
         <Route path="/amis" element={<Friends />} />
         <Route path="/u/:id" element={<FriendProfile />} />

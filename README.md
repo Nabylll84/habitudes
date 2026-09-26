@@ -81,21 +81,82 @@ Sans cela, Google se connecte mais la redirection retourne une erreur.
 - ✅ **Habitudes** : semaine en cours (lun. → dim.) à cocher, éditeur (nom, emoji, couleur)
 - 👥 **Amis** : recherche par pseudo, demandes acceptées/en attente, classement du jour 🏅
 - 💬 **Chat** : discute en temps réel avec tes amis (accusés de lecture ✓✓)
+- 🗓️ **Agenda** : vues **mois / semaine / jour**, création·édition·suppression, journée entière
 - 📈 **Stats** : coches totales, meilleure série, taux sur 14 jours, heatmap 30 jours
 - ⚡ **Realtime** : mises à jour instantanées quand un ami coche une habitude
 - 🌙 Thème sombre/clair (suit ton système), responsive mobile, French-first
 
+- 🗓️ **Agenda** : vues **mois / semaine / jour**, création·édition·suppression, journée entière
+- 🔗 **Sync Google Calendar** bidirectionnelle (import + export), événements Google en lecture seule
+
+## 🔗 Agenda & Google Calendar
+
+L'onglet Agenda fonctionne seul (stocké dans Supabase). La liaison Google est optionnelle.
+
+### 1. Migration SQL
+`supabase/migrations/0006_agenda.sql` crée `events` + `calendar_connections` (RLS, Realtime, RPC).
+Dans **Supabase → SQL Editor**, colle le contenu du fichier et exécute-le.
+
+### 2. OAuth Google (client « Web »)
+Sur la [console Google Cloud](https://console.cloud.google.com/apis/credentials) :
+1. Active **Google Calendar API**.
+2. Crée un **OAuth client ID** de type *Web application*.
+3. URI de redirection autorisée (exactement) :
+   ```
+   https://<ton-projet>.supabase.co/functions/v1/google-calendar?action=callback
+   ```
+4. Mets ton **domaine Netlify** dans *Authorized JavaScript origins*.
+
+### 3. Secrets de l'Edge Function
+```bash
+supabase secrets set \
+  GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com \
+  GOOGLE_CLIENT_SECRET=xxx \
+  OAUTH_STATE_SECRET=$(openssl rand -hex 32) \
+  APP_URL=https://ton-site.netlify.app
+
+supabase functions deploy google-calendar --no-verify-jwt
+```
+`APP_URL` sert à renvoyer l'utilisateur vers `/agenda` après le callback OAuth.
+
+### 4. Connecter
+Dans l'Agenda, bouton **Connecter Google Calendar** → *Synchroniser*.
+
+### Comment ça se passe
+- **OAuth** : l'app appelle `action=authorize` avec son JWT, la fonction renvoie l'URL Google ;
+  le token ne transite jamais dans l'URL. Le callback est protégé par un **state signé (HMAC-SHA256)**,
+  vérifié à temps constant.
+- **Pull** puis **push** : Google d'abord (incrémental via `syncToken`, repli en sync complète si
+  Google renvoie `410`), puis les événements locaux marqués `g_dirty`.
+- **Conflits** : un événement modifié localement **gagne** sur sa version Google.
+- **Suppressions** : soft delete en base, retrait définitif chez Google.
+- **Récurrences** : les séries Google sont **matérialisées en lecture seule** ( occurrences du mois
+  courant), jamais réécrites.
+- **Quota** : ~120 ms entre deux appels, et `g_dirty` reste à `true` si un envoi échoue (reprise
+  à la sync suivante).
+
+### Tokens
+`calendar_connections` n'a **aucune policy RLS** : les tokens ne sont lisibles que par
+l'Edge Function (clé `service_role`). L'interface n'obtient que l'état via
+`calendar_connection_status()` (compte, date de sync, dernière erreur).
+
+---
+
 ## 🛡️ Sécurité
 Toutes les données passent par les **Row Level Security** de Supabase : chacun ne voit/modifie que **ses** habitudes et celles de **ses amis acceptés**. Les actions sensibles (accepter une demande, cocher) passent par des **fonctions PostgreSQL `security definer`** atomiques.
+
+Les événements d'agenda sont **strictement privés** (`user_id = auth.uid()`) et les tokens Google
+ne quittent jamais l'Edge Function.
 
 ## 📁 Structure
 ```
 supabase/migrations/   → SQL unique de déploiement (schéma + RLS + fonctions)
+supabase/functions/    → Edge Functions (envoi d'emails, sync Google Calendar)
 src/
   lib/                 → client Supabase, auth, API, dates/streaks
   hooks/               → abonnement Realtime
   components/          → UI (cartes, modales, heatmap, ring…)
-  views/               → Journal, Habitudes, Amis, Profil, Stats, Login
+  views/               → Journal, Agenda, Habitudes, Amis, Profil, Stats, Login
   styles/              → design system (CSS variables)
 netlify.toml           → config build Netlify
 ```

@@ -119,3 +119,52 @@ export type Reaction = {
   emoji_key: string;
   created_at: string;
 };
+
+/** Événement d'agenda (table `events`). */
+export type CalendarEvent = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  color: string | null;
+  all_day: boolean;
+  /** ISO 8601 complet. Pour un événement sur la journée entière : minuit local. */
+  starts_at: string;
+  ends_at: string;
+  g_event_id: string | null;
+  g_readonly: boolean;
+  g_dirty: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Champs modifiables depuis l'interface. */
+export type CalendarEventInput = {
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  color?: string | null;
+  all_day: boolean;
+  starts_at: string;
+  ends_at: string;
+};
+
+/** État de la connexion Google Calendar (aucun secret). */
+export type CalendarStatus = {
+  connected: boolean;
+  account_email: string | null;
+  calendar_id: string | null;
+  last_sync_at: string | null;
+  last_error: string | null;
+};
+
+/** Résultat d'une synchronisation avec Google Calendar. */
+export type SyncResult = {
+  pushed: number;
+  pulled: number;
+  updated: number;
+  deleted: number;
+  skipped: number;
+  error: string | null;
+};
