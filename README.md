@@ -78,7 +78,7 @@ Sans cela, Google se connecte mais la redirection retourne une erreur.
 
 - 🔐 Connexion **Google OAuth ou email / mot de passe** (pseudo auto-généré, modifiable)
 - 📅 **Journal** du jour : coche tes habitudes, série +7 jours, anneau de progression
-- ✅ **Habitudes** : 7 derniers jours à cocher, éditeur (nom, emoji, couleur)
+- ✅ **Habitudes** : semaine en cours (lun. → dim.) à cocher, éditeur (nom, emoji, couleur)
 - 👥 **Amis** : recherche par pseudo, demandes acceptées/en attente, classement du jour 🏅
 - 💬 **Chat** : discute en temps réel avec tes amis (accusés de lecture ✓✓)
 - 📈 **Stats** : coches totales, meilleure série, taux sur 14 jours, heatmap 30 jours

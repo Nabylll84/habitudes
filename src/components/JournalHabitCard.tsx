@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { HabitState } from '@/lib/types';
-import { relativeDayLabel, weekdayLabel, dayNumber, lastDays, todayISO, freqSummary } from '@/lib/dates';
+import { relativeDayLabel, weekdayLabel, currentWeek, todayISO, freqSummary, isFuture } from '@/lib/dates';
 import { HabitIcon, FireIcon, CheckIcon, PlusIcon, MinusIcon, PencilIcon } from '@/lib/icons';
 import { useToast } from '@/components/Toast';
 import { celebrateBadges } from '@/lib/badges';
@@ -34,7 +34,7 @@ export function JournalHabitCard({
   const h = habit.habit;
   const isAmount = h.tracking_type === 'amount';
   const today = todayISO();
-  const week = lastDays(7).map((d) => ({ date: d, on: habit.dates.has(d), label: weekdayLabel(d), num: dayNumber(d) }));
+  const week = currentWeek().map((d) => ({ date: d, on: habit.dates.has(d), label: weekdayLabel(d), future: isFuture(d) }));
 
   const cur = habit.values?.get(today)?.value ?? 0;
   const goal = h.goal_amount ?? null;
@@ -101,7 +101,11 @@ export function JournalHabitCard({
 
       <div className="week-dots">
         {week.map((d) => (
-          <div key={d.date} className={`wdot ${d.on ? 'on' : ''}`} title={`${relativeDayLabel(d.date)} — ${d.on ? 'fait' : 'à faire'}`}>
+          <div
+            key={d.date}
+            className={`wdot ${d.on ? 'on' : ''} ${d.future ? 'future' : ''}`}
+            title={d.future ? `${d.label} — à venir` : `${relativeDayLabel(d.date)} — ${d.on ? 'fait' : 'à faire'}`}
+          >
             <span className="wdot-dot" style={d.on ? { background: h.color } : undefined} />
             <small>{d.label}</small>
           </div>

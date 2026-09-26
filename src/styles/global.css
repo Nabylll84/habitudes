@@ -575,6 +575,8 @@ textarea:-webkit-autofill, select:-webkit-autofill {
 }
 .wdot.on .wdot-dot { box-shadow: 0 0 10px color-mix(in srgb, var(--ok) 40%, transparent); }
 .wdot.on small { color: var(--text); font-weight: 600; }
+.wdot.future .wdot-dot { border-style: dashed; opacity: 0.4; }
+.wdot.future small { opacity: 0.45; }
 
 .check-btn {
   position: relative;
@@ -660,6 +662,9 @@ textarea:-webkit-autofill, select:-webkit-autofill {
 }
 .day-btn:hover { transform: scale(1.15); border-color: var(--accent); }
 .day-btn.on { box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.22); }
+.day-btn.future { cursor: default; pointer-events: none; border-style: dashed; opacity: 0.4; }
+.cell-day.is-today b { color: var(--accent); }
+.cell-day.is-future { opacity: 0.4; }
 
 /* ---------- Heatmap / bars ---------- */
 .heatmap {

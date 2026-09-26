@@ -11,7 +11,7 @@ import {
   UserBadge,
   Reaction,
 } from './types';
-import { computeStreak, computeHabitStreak, todayISO, lastDays } from './dates';
+import { computeStreak, computeHabitStreak, todayISO, lastDays, currentWeek } from './dates';
 
 type Row = Record<string, unknown>;
 
@@ -440,7 +440,7 @@ export async function fetchProfileView(targetId: string): Promise<ProfileView> {
   const last30 = lastDays(30).map((d) => ({ date: d, count: dayCount.get(d) ?? 0 }));
   const last90 = lastDays(90).map((d) => ({ date: d, count: dayCount.get(d) ?? 0 }));
 
-  const weekWindow = new Set(lastDays(8));
+  const weekWindow = new Set(currentWeek());
   const weekTotal = [...dayCount.entries()]
     .filter(([d]) => weekWindow.has(d))
     .reduce((s, [, c]) => s + c, 0);

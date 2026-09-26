@@ -9,7 +9,7 @@ import { Confirm } from '@/components/Modal';
 import { EmptyState, Skeleton } from '@/components/ui';
 import { HabitIcon, FireIcon, TrashIcon, FolderIcon, PinIcon, PencilIcon } from '@/lib/icons';
 import type { HabitState, Habit } from '@/lib/types';
-import { lastDays, weekdayLabel, dayNumber, relativeDayLabel } from '@/lib/dates';
+import { currentWeek, weekdayLabel, dayNumber, relativeDayLabel, shortDate, todayISO, isFuture } from '@/lib/dates';
 
 export default function Habits() {
   const { user } = useAuth();
@@ -67,7 +67,8 @@ export default function Habits() {
     }
   };
 
-  const week = lastDays(7);
+  const today = todayISO();
+  const week = currentWeek();
   const sorted = [...(habits ?? [])].sort((a, b) =>
     (Number(b.habit.pinned) - Number(a.habit.pinned)) ||
     ((a.habit.sort_order ?? 0) - (b.habit.sort_order ?? 0)) ||
@@ -90,6 +91,7 @@ export default function Habits() {
         <div>
           <p className="eyebrow">Mes routines</p>
           <h1>Habitudes</h1>
+          <p className="muted">Semaine du {shortDate(week[0])} au {shortDate(week[6])}</p>
           <p className="muted">Objectifs, fréquences et catégories. Les compteurs se remplissent depuis le Journal.</p>
         </div>
         <button className="btn btn-primary" onClick={() => setModal({ editing: null })}>+ Nouvelle</button>
@@ -104,7 +106,11 @@ export default function Habits() {
           <div className="table-head">
             <span className="cell-name">Habitude</span>
             {week.map((d) => (
-              <span key={d} className="cell-day" title={relativeDayLabel(d)}>
+              <span
+                key={d}
+                className={`cell-day ${d === today ? 'is-today' : ''} ${isFuture(d) ? 'is-future' : ''}`}
+                title={relativeDayLabel(d)}
+              >
                 <small>{weekdayLabel(d)}</small>
                 <b>{dayNumber(d)}</b>
               </span>
@@ -137,18 +143,24 @@ export default function Habits() {
                     </span>
                     {week.map((d) => {
                       const v = hs.values?.get(d);
+                      const future = isFuture(d);
                       if (isAmount) {
                         const val = v?.value ?? 0;
                         const ok = goal != null ? val >= goal : val > 0;
                         return (
                           <span
                             key={d}
-                            className={`cell-day amount-cell ${ok ? 'on' : ''}`}
+                            className={`cell-day amount-cell ${ok ? 'on' : ''} ${future ? 'is-future' : ''}`}
                             style={ok ? { color: h.color } : undefined}
                             title={v ? `${val}${h.goal_unit ? ` ${h.goal_unit}` : ''} — modifiable dans le Journal` : 'À faire'}
                           >
                             <b>{v ? val : '·'}</b>
                           </span>
+                        );
+                      }
+                      if (future) {
+                        return (
+                          <span key={d} className="day-btn future" title="Pas encore arrivé" aria-hidden="true" />
                         );
                       }
                       const on = hs.dates.has(d);

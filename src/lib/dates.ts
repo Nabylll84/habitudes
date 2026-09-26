@@ -31,6 +31,27 @@ export function lastDays(n: number): string[] {
   return out;
 }
 
+/**
+ * La semaine calendaire du lundi au dimanche (7 dates ISO, ordre croissant).
+ * Contrairement à lastDays(), la fenêtre ne glisse pas : une colonne reste
+ * toujours le même jour de la semaine.
+ */
+export function currentWeek(ref: Date = new Date()): string[] {
+  const dow = ref.getDay() === 0 ? 7 : ref.getDay();
+  const monday = new Date(ref);
+  monday.setDate(ref.getDate() - (dow - 1));
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return toISO(d);
+  });
+}
+
+/** La date ISO est-elle dans le futur (au-delà d'aujourd'hui) ? */
+export function isFuture(dateStr: string): boolean {
+  return dateStr > todayISO();
+}
+
 export function computeStreak(dates: Set<string>): number {
   let streak = 0;
   const seen = new Set(dates);
